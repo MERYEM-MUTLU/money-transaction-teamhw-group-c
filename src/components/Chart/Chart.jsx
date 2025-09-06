@@ -5,16 +5,15 @@ import styles from "./Chart.module.css";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import { selectSummary } from "../../redux/statistics/selectors";
-
 ChartJS.register(ArcElement, Tooltip, Legend);
-
 const Chart = () => {
   const categoriesData = useSelector(selectCategories) || [];
   const balance = useSelector(selectTotalBalance) ?? 0;
-  const summary = useSelector(selectSummary) || { incomeSummary: 0, expenseSummary: 0 };
+  const summary = useSelector(selectSummary) || {
+    incomeSummary: 0,
+    expenseSummary: 0,
+  };
   const { expenseSummary } = summary;
-
-
   const categoryColors = {
     "Main expenses": "#FED057",
     Products: "#FFD8D0",
@@ -27,11 +26,10 @@ const Chart = () => {
     "Other expenses": "#00AD84",
     Entertainment: "#FF6596",
   };
-
   // Filter out income category and ensure we have valid data
-  const expenseCategories = categoriesData.filter(c => c.category && c.category !== 'Income' && c.category !== 'INCOME');
-  
-  
+  const expenseCategories = categoriesData.filter(
+    (c) => c.category && c.category !== "Income" && c.category !== "INCOME"
+  );
   if (!expenseCategories.length || expenseSummary === 0) {
     return (
       <div className={styles.container}>
@@ -40,16 +38,10 @@ const Chart = () => {
             <p>No expense data available</p>
             <p>Add some transactions to see your spending breakdown</p>
           </div>
-          <div className={styles.balanceDisplay}>
-            <p className={styles.balanceAmount}>
-              ₴ {expenseSummary.toLocaleString("uk-UA", { minimumFractionDigits: 2 })}
-            </p>
-          </div>
         </div>
       </div>
     );
   }
-
   const data = {
     labels: expenseCategories.map((c) => c.category),
     datasets: [
@@ -63,18 +55,16 @@ const Chart = () => {
       },
     ],
   };
-
-
   const options = {
     cutout: "70%",
     responsive: true,
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "#fff",
+        bodyColor: "#fff",
+        borderColor: "rgba(255, 255, 255, 0.2)",
         borderWidth: 1,
         callbacks: {
           label: (ctx) =>
@@ -89,30 +79,34 @@ const Chart = () => {
       arc: {
         borderWidth: 0,
         hoverBorderWidth: 2,
-        hoverBorderColor: '#fff',
+        hoverBorderColor: "#fff",
       },
     },
     interaction: {
       intersect: false,
     },
   };
-
   return (
     <div className={styles.container}>
       <div className={styles.chartWrapper}>
         <Doughnut data={data} options={options} />
         <div className={styles.balanceDisplay}>
           <p className={styles.balanceAmount}>
-            ₴ {expenseSummary.toLocaleString("uk-UA", { minimumFractionDigits: 2 })}
+            ₺{" "}
+            {expenseSummary.toLocaleString("tr-TR", {
+              minimumFractionDigits: 2,
+            })}
           </p>
         </div>
       </div>
       <div className={styles.legend}>
         {expenseCategories.map((category, index) => (
           <div key={category.category} className={styles.legendItem}>
-            <div 
-              className={styles.legendColor} 
-              style={{ backgroundColor: categoryColors[category.category] || "#808080" }}
+            <div
+              className={styles.legendColor}
+              style={{
+                backgroundColor: categoryColors[category.category] || "#808080",
+              }}
             />
             <span className={styles.legendLabel}>{category.category}</span>
           </div>
@@ -121,5 +115,4 @@ const Chart = () => {
     </div>
   );
 };
-
 export default Chart;
