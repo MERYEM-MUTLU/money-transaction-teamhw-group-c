@@ -44,7 +44,8 @@ const transactionsSlice = createSlice({
         state.isTransLoading = false;
       })
       .addCase(logoutThunk.fulfilled, (state) => {
-        state.transactions = [];
+        // Keep transactions for demo purposes
+        // state.transactions = [];
         state.isTransError = null;
       })
       .addMatcher(

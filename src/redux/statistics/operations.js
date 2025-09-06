@@ -26,7 +26,23 @@ export const getCategories = createAsyncThunk(
       const { data } = await moneyGuardAPI.get(`/categories`);
       return data.data;
     } catch (error) {
-      return thunkApi.rejectWithValue(error.message);
+      // Fallback to predefined categories
+      const defaultCategories = [
+        "Main expenses",
+        "Products",
+        "Car",
+        "Self care",
+        "Child care",
+        "Household products",
+        "Education",
+        "Leisure",
+        "Other expenses",
+        "Entertainment",
+      ];
+
+      // Store categories in localStorage for consistency
+      localStorage.setItem("categories", JSON.stringify(defaultCategories));
+      return defaultCategories;
     }
   }
 );

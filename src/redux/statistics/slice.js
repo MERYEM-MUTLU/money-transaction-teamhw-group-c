@@ -33,6 +33,13 @@ const statsSlice = createSlice({
       .addCase(getCategories.fulfilled, (state, action) => {
         state.categories = action.payload;
       })
+      .addCase(getCategories.rejected, (state) => {
+        // Fallback to localStorage categories
+        const savedCategories = localStorage.getItem("categories");
+        if (savedCategories) {
+          state.categories = JSON.parse(savedCategories);
+        }
+      })
       .addMatcher(isAnyOf(getTransSummary.pending), (state) => {
         state.isStatisticsLoading = true;
         state.isStatisticsError = null;

@@ -8,7 +8,7 @@ import {
   editUserAvatar,
   getTotalBalanceThunk,
   resetPassword,
-  changePassword
+  changePassword,
 } from "./operations";
 
 const initialState = {
@@ -25,6 +25,10 @@ const initialState = {
   isAuthLoading: false,
   isAuthError: null,
   isRegistering: false,
+  isLoading: false,
+  error: null,
+  resetEmailSent: false,
+  passwordChanged: false,
 };
 
 const authSlice = createSlice({
@@ -40,43 +44,80 @@ const authSlice = createSlice({
     clearAvatarPreview: (state) => {
       state.preview = null;
     },
+    // Manual logout action in case automatic logout fails
+    forceLogout: (state) => {
+      return { ...initialState };
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Logout cases - handle both success and failure
+      .addCase(logoutThunk.pending, (state) => {
+        state.isAuthLoading = true;
+      })
       .addCase(logoutThunk.fulfilled, () => {
+        // Always reset to initial state on successful logout
         return { ...initialState };
       })
+      .addCase(logoutThunk.rejected, () => {
+        // Even if logout fails, reset the state for security
+        return { ...initialState };
+      })
+
+      // Balance cases
       .addCase(getTotalBalanceThunk.fulfilled, (state, action) => {
         state.user.balance = action.payload;
       })
+
+      // Refresh user cases
       .addCase(refreshUserThunk.fulfilled, (state, action) => {
         state.user = action.payload.data;
         state.isLoggedIn = true;
         state.isRefreshing = false;
         state.isAuthLoading = false;
+        state.isAuthError = null;
       })
       .addCase(refreshUserThunk.pending, (state) => {
         state.isRefreshing = true;
         state.isAuthLoading = true;
-        state.isLoggedIn = true;
       })
       .addCase(refreshUserThunk.rejected, (state) => {
         state.isRefreshing = false;
         state.isAuthLoading = false;
         state.isLoggedIn = false;
+        state.token = null;
       })
+
+      // Edit user name cases
       .addCase(editUserName.fulfilled, (state, action) => {
         state.user.name = action.payload.data.name;
-        state.isLoggedIn = true;
-        state.isRefreshing = false;
         state.isAuthLoading = false;
       })
+      .addCase(editUserName.pending, (state) => {
+        state.isAuthLoading = true;
+        state.isAuthError = null;
+      })
+      .addCase(editUserName.rejected, (state, action) => {
+        state.isAuthLoading = false;
+        state.isAuthError = action.payload;
+      })
+
+      // Edit user avatar cases
       .addCase(editUserAvatar.fulfilled, (state, action) => {
         state.user.avatar = action.payload.data.avatar;
-        state.isLoggedIn = true;
-        state.isRefreshing = false;
         state.isAuthLoading = false;
+        state.preview = null; // Clear preview after successful upload
       })
+      .addCase(editUserAvatar.pending, (state) => {
+        state.isAuthLoading = true;
+        state.isAuthError = null;
+      })
+      .addCase(editUserAvatar.rejected, (state, action) => {
+        state.isAuthLoading = false;
+        state.isAuthError = action.payload;
+      })
+
+      // Reset password cases
       .addCase(resetPassword.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -89,7 +130,10 @@ const authSlice = createSlice({
       .addCase(resetPassword.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.resetEmailSent = false;
       })
+
+      // Change password cases
       .addCase(changePassword.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -102,7 +146,10 @@ const authSlice = createSlice({
       .addCase(changePassword.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.passwordChanged = false;
       })
+
+      // Login and Register success matcher
       .addMatcher(
         isAnyOf(registerThunk.fulfilled, loginThunk.fulfilled),
         (state, action) => {
@@ -113,8 +160,12 @@ const authSlice = createSlice({
           state.token = action.payload.data.accessToken;
           state.isLoggedIn = true;
           state.isRegistering = false;
+          state.isAuthLoading = false;
+          state.isAuthError = null;
         }
       )
+
+      // Login and Register pending matcher
       .addMatcher(
         isAnyOf(registerThunk.pending, loginThunk.pending),
         (state) => {
@@ -123,17 +174,25 @@ const authSlice = createSlice({
           state.isRegistering = true;
         }
       )
+
+      // Login and Register rejected matcher
       .addMatcher(
         isAnyOf(registerThunk.rejected, loginThunk.rejected),
         (state, action) => {
           state.isAuthLoading = false;
           state.isAuthError = action.payload;
           state.isRegistering = false;
+          state.isLoggedIn = false;
+          state.token = null;
         }
       );
   },
 });
 
 export const authReducer = authSlice.reducer;
-export const { updateBalance, setAvatarPreview, clearAvatarPreview } =
-  authSlice.actions;
+export const {
+  updateBalance,
+  setAvatarPreview,
+  clearAvatarPreview,
+  forceLogout,
+} = authSlice.actions;
