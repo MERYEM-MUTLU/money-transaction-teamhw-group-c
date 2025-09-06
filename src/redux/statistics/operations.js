@@ -1,6 +1,40 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { moneyGuardAPI, setAuthHeader } from "../auth/operations";
 
+// Helper function to generate summary from transactions
+const generateSummaryFromTransactions = (transactions, month, year) => {
+  const filteredTransactions = transactions.filter((transaction) => {
+    // Handle different date formats
+    let transactionDate;
+    if (transaction.date.includes("-")) {
+      // Handle DD-MM-YYYY format
+      const [day, monthPart, yearPart] = transaction.date.split("-");
+      transactionDate = new Date(yearPart, monthPart - 1, day);
+    } else {
+      transactionDate = new Date(transaction.date);
+    }
+
+    const transactionMonth = transactionDate.getMonth() + 1;
+    const transactionYear = transactionDate.getFullYear();
+
+    return (
+      transactionMonth === parseInt(month) && transactionYear === parseInt(year)
+    );
+  });
+
+  const summary = {};
+
+  filteredTransactions.forEach((transaction) => {
+    const category = transaction.category || "Other";
+    if (!summary[category]) {
+      summary[category] = { category, total: 0 };
+    }
+    summary[category].total += parseFloat(transaction.sum) || 0;
+  });
+
+  return Object.values(summary);
+};
+
 export const getTransSummary = createAsyncThunk(
   "transactions/summary",
   async ({ month, year }, thunkApi) => {
@@ -14,7 +48,15 @@ export const getTransSummary = createAsyncThunk(
       const { data } = await moneyGuardAPI.get(`/summary?date=${date}`);
       return data.data;
     } catch (error) {
-      return thunkApi.rejectWithValue(error.message);
+      // Fallback to localStorage transactions for statistics
+      const savedTransactions = localStorage.getItem("transactions");
+      if (savedTransactions) {
+        const transactions = JSON.parse(savedTransactions);
+        return generateSummaryFromTransactions(transactions, month, year);
+      }
+
+      // Return empty data if no transactions
+      return [];
     }
   }
 );

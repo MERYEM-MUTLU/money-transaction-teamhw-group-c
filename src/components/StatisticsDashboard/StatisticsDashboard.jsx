@@ -8,7 +8,7 @@ import StatisticsChart from "../Chart/Chart";
 import BallanceTab from "../Balance/Balance";
 import CurrencyTab from "../Currency/Currency";
 import { getTransSummary } from "../../redux/statistics/operations";
-import { selectSummary } from "../../redux/statistics/selectors";
+import { selectSummary, selectStatLoading, selectStatError } from "../../redux/statistics/selectors";
 
 const StatisticsDashboard = () => {
   const dispatch = useDispatch();
@@ -21,6 +21,8 @@ const StatisticsDashboard = () => {
   );
 
   const { incomeSummary, expenseSummary } = useSelector(selectSummary);
+  const isLoading = useSelector(selectStatLoading);
+  const error = useSelector(selectStatError);
   const balance = incomeSummary - expenseSummary;
 
   const monthOptions = [
@@ -108,6 +110,12 @@ const StatisticsDashboard = () => {
     <div className={styles.container}>
       <div className={styles.statisticsChart}>
         <h1>Statistics</h1>
+        {error && (
+          <div className={styles.errorMessage}>
+            <p>Error loading statistics: {error}</p>
+            <p>Using local data instead.</p>
+          </div>
+        )}
         <div className={styles.statisticsChartContainer}>
           <StatisticsChart />
         </div>

@@ -45,6 +45,33 @@ export const fetchTransactions = createAsyncThunk(
           sum: 45.0,
           createdAt: new Date().toISOString(),
         },
+        {
+          _id: "sample_4",
+          date: "12-12-2024",
+          type: "EXPENSE",
+          category: "Main expenses",
+          comment: "Rent payment",
+          sum: 800.0,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          _id: "sample_5",
+          date: "11-12-2024",
+          type: "EXPENSE",
+          category: "Self care",
+          comment: "Haircut",
+          sum: 25.0,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          _id: "sample_6",
+          date: "10-12-2024",
+          type: "EXPENSE",
+          category: "Entertainment",
+          comment: "Movie tickets",
+          sum: 15.0,
+          createdAt: new Date().toISOString(),
+        },
       ];
 
       localStorage.setItem("transactions", JSON.stringify(sampleTransactions));

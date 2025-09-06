@@ -17,17 +17,23 @@ const statsSlice = createSlice({
         state.isStatisticsLoading = false;
 
         const incomeItem = action.payload.find(
-          (item) => item.category === "Income" || !item.category
+          (item) => item.category === "Income" || item.category === "INCOME"
         );
 
         const expenses = action.payload.filter(
-          (item) => item.category && item.category !== "Income"
+          (item) =>
+            item.category &&
+            item.category !== "Income" &&
+            item.category !== "INCOME"
         );
 
         state.categories = expenses;
         state.summary = {
           incomeSummary: incomeItem?.total || 0,
-          expenseSummary: expenses.reduce((sum, item) => sum + item.total, 0),
+          expenseSummary: expenses.reduce(
+            (sum, item) => sum + (item.total || 0),
+            0
+          ),
         };
       })
       .addCase(getCategories.fulfilled, (state, action) => {
